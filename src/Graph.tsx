@@ -14,7 +14,7 @@ interface IProps {
  * Perspective library adds load to HTMLElement prototype.
  * This interface acts as a wrapper for Typescript compiler.
  */
-interface PerspectiveViewerElement {
+interface PerspectiveViewerElement extends HTMLElement {
   load: (table: Table) => void,
 }
 
@@ -32,7 +32,7 @@ class Graph extends Component<IProps, {}> {
 
   componentDidMount() {
     // Get element to attach the table from the DOM.
-    const elem: PerspectiveViewerElement = document.getElementsByTagName('perspective-viewer')[0] as unknown as PerspectiveViewerElement;
+    const elem = document.getElementsByTagName('perspective-viewer')[0] as unknown as PerspectiveViewerElement;
 
     const schema = {
       stock: 'string',
@@ -44,13 +44,35 @@ class Graph extends Component<IProps, {}> {
     if (window.perspective && window.perspective.worker()) {
       this.table = window.perspective.worker().table(schema);
     }
+    // Check if `this.table` is defined and not null
     if (this.table) {
-      // Load the `table` in the `<perspective-viewer>` DOM reference.
+      // If `this.table` is available, execute the following operations:
 
-      // Add more Perspective configurations here.
+      // Load the `table` data into the `<perspective-viewer>` DOM reference.
       elem.load(this.table);
+
+      // Set Perspective configurations for the `<perspective-viewer>` element:
+
+      // Set the default view mode to 'y_line'.
+      elem.setAttribute('view', 'y_line');
+
+      // Configure column pivots using the 'stock' column.
+      elem.setAttribute('column-pivots', '["stock"]');
+
+      // Configure row pivots using the 'timestamp' column.
+      elem.setAttribute('row-pivots', '["timestamp"]');
+
+      // Configure visible columns with 'top_ask_price'.
+      elem.setAttribute('columns', '["top_ask_price"]');
+
+      // Configure aggregate functions for specific columns using a JSON object.
+      elem.setAttribute(
+        'aggregates',
+        `{"stock": "distinct count", "top_ask_price": "avg", "top_bid_price": "avg", "timestamp": "distinct count"}`
+      );
     }
   }
+
 
   componentDidUpdate() {
     // Everytime the data props is updated, insert the data into Perspective table

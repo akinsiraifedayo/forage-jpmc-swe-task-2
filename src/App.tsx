@@ -8,6 +8,7 @@ import './App.css';
  */
 interface IState {
   data: ServerRespond[],
+  showGraph: boolean,
 }
 
 /**
@@ -22,6 +23,7 @@ class App extends Component<{}, IState> {
       // data saves the server responds.
       // We use this state to parse data down to the child element (Graph) as element property
       data: [],
+      showGraph: false,
     };
   }
 
@@ -29,19 +31,41 @@ class App extends Component<{}, IState> {
    * Render Graph react component with state.data parse as property data
    */
   renderGraph() {
+    if (this.state.showGraph) {
     return (<Graph data={this.state.data}/>)
+    }
   }
 
   /**
    * Get new data from server and update the state with the new data
    */
-  getDataFromServer() {
+// This function retrieves data from the server at a regular interval.
+getDataFromServer() {
+  // Initialize a variable to keep track of iterations.
+  let x = 0;
+
+  // Set up an interval to repeat every 100 milliseconds.
+  const interval = setInterval(() => {
+    // Call a function to fetch data from the server using DataStreamer.
     DataStreamer.getData((serverResponds: ServerRespond[]) => {
-      // Update the state by creating a new array of data that consists of
-      // Previous data in the state and the new data from server
-      this.setState({ data: [...this.state.data, ...serverResponds] });
+      // Update the state of the component with the new data from the server.
+      // This will trigger a re-render of the component to show the updated data.
+      this.setState({ 
+        data: serverResponds,
+        showGraph: true 
+      });
     });
-  }
+
+    // Increment the iteration counter.
+    x++;
+
+    // If the iteration counter exceeds 1000, clear the interval to stop fetching data.
+    if (x > 1000) {
+      clearInterval(interval);
+    }
+  }, 100); // Interval set to 100 milliseconds.
+}
+
 
   /**
    * Render the App react component
